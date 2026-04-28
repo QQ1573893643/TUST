@@ -1,0 +1,420 @@
+
+<h2 class="sr-only">天津科技大学食品学院2026届硕士招录数据综合分析，含考试科目、好考程度评估、历年趋势及报考指南。</h2>
+<div style="padding: 0 0 32px;">
+
+<div style="border-bottom: 0.5px solid var(--color-border-tertiary); padding: 18px 0 14px;">
+  <div style="font-size: 11px; color: var(--color-text-tertiary); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px;">天津科技大学 · 食品科学与工程学院</div>
+  <div style="font-size: 20px; font-weight: 500; color: var(--color-text-primary);">2026届硕士研究生报考全面分析</div>
+  <div style="font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px;">数据来源：官方一志愿复试名单 + 拟录取名单 · 排除少干及退役大学生士兵计划</div>
+</div>
+
+<div id="tab-nav" style="display:flex;gap:0;border-bottom:0.5px solid var(--color-border-tertiary);overflow-x:auto;margin-bottom:20px;"></div>
+<div id="app-content"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const MAJORS = [
+  { id:'guide',  name:'报考指南', color:'#888780' },
+  { id:'compare',name:'横向对比', color:'#888780' },
+  { id:'fjas',   name:'食品加工与安全',     code:'095135 · 专业型', color:'#BA7517' },
+  { id:'fse83',  name:'食品科学与工程（工）',code:'083200 · 学术型', color:'#1D9E75' },
+  { id:'fse97',  name:'食品科学与工程（农）',code:'097200 · 学术型', color:'#378ADD' },
+  { id:'bm',     name:'生物与医药',         code:'086000 · 专业型', color:'#7F77DD' },
+  { id:'phm',    name:'公共卫生与预防医学',  code:'100400 · 学术型', color:'#D85A30' },
+];
+
+const EXAM = {
+  fjas:  { subjects:['①政治','②英语二','③农业知识综合三','④804微生物学'], math:false, eng:2, hard:'低', hardNote:'英语二，无数学，4门专业性强但备考友好' },
+  fse83: { subjects:['①政治','②英语一','③302数学（一）','④804微生物学'], math:true,  eng:1, hard:'高', hardNote:'含数学一+英语一，是本院考试难度最高的专业' },
+  fse97: { subjects:['①政治','②英语一','③315化学（农）','④414植物生理学'], math:false, eng:1, hard:'中', hardNote:'英语一+农学化学，无数学，难度适中' },
+  bm:    { subjects:['①政治','②英语二','③338生物化学','④专业课'], math:false, eng:2, hard:'低*', hardNote:'2026年前考数学，2026年起改为生物化学，历年分数不可比较！', changed:true },
+  phm:   { subjects:['①政治','②英语一','③713营养食卫综合','（无第④门）'], math:false, eng:1, hard:'中', hardNote:'英语一+综合专业课，无数学，但需要系统背诵综合科' },
+};
+
+const D = {
+  fjas:{
+    years:[2019,2020,2021,2022,2023,2024,2025,2026],
+    plan: [45,56,74,127,116,121,120,120],
+    retest:[41,85,129,154,146,169,136,111],
+    admit: [39,70,85,124,120,121,120,107],
+    line:  [255,338,308,296,285,330,245,240],
+    minAdm:[255,340,308,297,288,333,260,240],
+    median:[322,360,359,355,331,368,317,317],
+    bigSmall:'典型大小年波动专业。2020年分数高峰（338分），2024年再次高峰（330分），随后2025年骤降至245分，2026年继续降至240分，已是历史最低。',
+    trend:'2026年复试线=国家线240分，进线即进面，且淘汰率极低（111人复试录取107人，约4%）。2025年分数看起来高（260分中位317分），是因为当年出题相对容易考生普遍考高，而非竞争激烈，实际刷人也不严重。',
+    advice:'目标分310分以上（录取中位数317分）可以稳心态。过国家线就进面，复试重要性提升，但整体压力是全院最小。',
+    warn:null,
+    tip:'连续两年处于大年低位，进面几乎零淘汰，是近8年最好考的年份。',
+    easy:'★★★★★'
+  },
+  fse83:{
+    years:[2019,2020,2021,2022,2023,2024,2025,2026],
+    plan: [62,47,54,54,51,74,82,93],
+    retest:[101,86,130,73,98,112,82,135],
+    admit: [50,55,73,71,73,80,81,93],
+    line:  [320,295,265,273,282,268,260,265],
+    minAdm:[321,304,291,273,282,268,260,275],
+    median:[352.5,337,337,315,317.5,337,295,330],
+    bigSmall:'2025年分数看似较高（线260/中位295），是因为当年出题相对容易而非竞争激烈，刷人实际也不多。2026年进入小年（中位330分回升），说明一志愿考生质量提升。',
+    trend:'2026年复试135人→录取93人，淘汰率约31%，全院唯一淘汰压力显著的专业。复试线265但录取最低275，说明265-274分段进面者均未能录取。',
+    advice:'目标分325分以上（录取中位数330分）可稳心态。建议备考目标280分+，复试务必认真，此专业进面≠录取。',
+    warn:'全院竞争最激烈！2026年约1/3参加复试的学生被淘汰，进面不等于录取。',
+    tip:'考试难度高（数学+英语一），复试淘汰率高，是全院综合难度最大的专业。',
+    easy:'★★☆☆☆'
+  },
+  fse97:{
+    years:[2026],
+    plan: [10],
+    retest:[3],
+    admit: [3],
+    line:  [240],
+    minAdm:[240],
+    median:[251],
+    bigSmall:'该专业（农学授权点）数据仅有2026年一年，样本极少。',
+    trend:'2026年仅3人一志愿进面，全部录取，零淘汰。计划10人但仅3人上线，名额大量空缺靠调剂填充。',
+    advice:'一志愿报考风险极低，几乎肯定录取，但需考虑该方向就业面相对较窄，适合对农产品贮藏方向有兴趣的同学。',
+    warn:null,
+    tip:'报考人数极少，一志愿几乎保录，但招生吸引力明显偏低。',
+    easy:'★★★★☆'
+  },
+  bm:{
+    years:[2019,2020,2021,2022,2023,2024,2025,2026],
+    plan: [107,113,123,98,100,101,106,106],
+    retest:[66,101,115,111,127,127,61,75],
+    admit: [58,95,113,106,102,101,61,75],
+    line:  [274,264,264,273,273,276,260,268],
+    minAdm:[275,264,264,273,285,283,261,268],
+    median:[325,311,313,321,320,330,287,356],
+    bigSmall:'重大提示：2026年前该专业考数学（308/338），2026年改为生物化学，因此历年分数数据不具横向可比性！仅录取人数趋势有参考意义（2025年骤降至61人，2026年回升至75人，但计划106人，缺口仍达31人）。',
+    trend:'2026年75人复试，75人全录，零淘汰，且考试科目变更使得新考生更容易备考。录取中位数从2025年287分大幅升至356分，说明今年一志愿中高分考生更多，但低分段生源仍然匮乏。',
+    advice:'过线268分即进面，零淘汰等于进面即录取。由于今年改为生物化学备考，对于不擅长数学的同学来说是很好的选择。',
+    warn:'历年分数数据因考试科目于2026年发生重大变化（原考数学→现考生物化学），分数线历史对比无参考意义，请以2026年数据为准。',
+    tip:'2026年考试科目改革，历史分数无参考价值，以本年数据为准。零淘汰，适合不擅数学的考生。',
+    easy:'★★★★☆'
+  },
+  phm:{
+    years:[2019,2020,2021,2022,2023,2024,2025,2026],
+    plan: [24,24,29,29,27,33,30,30],
+    retest:[47,30,34,30,33,20,11,7],
+    admit: [25,29,32,28,33,20,11,7],
+    line:  [306,301,302,309,300,304,298,294],
+    minAdm:[306,301,302,311,300,304,298,294],
+    median:[361,330,333.5,345.5,344,337,338,313],
+    bigSmall:'分数线全院最高（历年均在294-309分），但一志愿报考人数从2019年47人跌至2026年7人，呈现持续断崖式下跌。计划30人而仅7人上线，填满率仅23%，绝大部分靠调剂。',
+    trend:'2026年7人参加复试全部录取，零淘汰，过线必录。但一志愿整体报考意愿持续走弱，说明业内对该方向在食品学院的认可度有限。',
+    advice:'分数线入口294分是全院最高，但一志愿缺口极大。作为一志愿直报，过线即稳录，风险低。但更多时候该专业被视为调剂目标。',
+    warn:'一志愿生源已连续多年严重不足，计划名额7年间从未靠一志愿填满，更多靠调剂填充。',
+    tip:'分数线最高，但实际一志愿竞争几乎为零，更适合调剂定位而非首选。',
+    easy:'★★★☆☆'
+  }
+};
+
+const chartInstances = {};
+let currentTab = 'guide';
+
+function isDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+function gc(){ return isDark()?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)'; }
+function tc(){ return isDark()?'#64748b':'#888780'; }
+
+function tag(text, color, bg){ return `<span style="display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;background:${bg};color:${color};font-weight:500;white-space:nowrap;">${text}</span>`; }
+
+function examTags(id){
+  const e = EXAM[id];
+  const mathTag = e.math ? tag('考数学','#E24B4A','var(--color-background-danger)') : tag('不考数学','#1D9E75','var(--color-background-success)');
+  const engTag = e.eng===1 ? tag('英语一','#EF9F27','var(--color-background-warning)') : tag('英语二','#1D9E75','var(--color-background-success)');
+  const typeTag = e.hard==='高' ? tag('考试难度：高','#E24B4A','var(--color-background-danger)') : e.hard==='中' ? tag('考试难度：中','#EF9F27','var(--color-background-warning)') : tag(`考试难度：${e.hard}`,'#1D9E75','var(--color-background-success)');
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${mathTag}${engTag}${typeTag}</div>`;
+}
+
+function buildGuide(){
+  return `
+  <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:16px;line-height:1.8;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;border:0.5px solid var(--color-border-tertiary);">
+    本报告帮助你系统判断哪个专业适合报考，建议先阅读本页框架再查看各专业数据。
+  </div>
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">第一步：先确认自己能不能考数学</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+    <div style="background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-lg);padding:14px;">
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-danger);margin-bottom:6px;">需要考数学的专业</div>
+      <div style="font-size:13px;color:var(--color-text-danger);line-height:1.8;">食品科学与工程（工）083200<br><span style="font-size:11px;opacity:0.8;">302数学一 + 英语一，全院最难</span></div>
+      <div style="margin-top:8px;font-size:12px;color:var(--color-text-danger);line-height:1.6;opacity:0.9;">若数学不好，建议优先考虑其他专业。数学一难度高，一旦数学失利很难通过初试。</div>
+    </div>
+    <div style="background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-lg);padding:14px;">
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-success);margin-bottom:6px;">不考数学的专业</div>
+      <div style="font-size:13px;color:var(--color-text-success);line-height:1.8;">食品加工与安全、生物与医药<br>食品科学与工程（农）、公共卫生<br><span style="font-size:11px;opacity:0.8;">专业课替代数学，备考更专注</span></div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">第二步：英语一 vs 英语二</div>
+  <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:20px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:12px;font-weight:500;color:var(--color-text-warning);margin-bottom:6px;">考英语一的专业</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.8;">食品科学与工程（工）083200<br>食品科学与工程（农）097200<br>公共卫生与预防医学 100400</div>
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px;">英语一难度高，建议英语基础较好的同学</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:500;color:var(--color-text-success);margin-bottom:6px;">考英语二的专业</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.8;">食品加工与安全 095135<br>生物与医药 086000</div>
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px;">英语二相对容易，英语弱势者更友好</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">第三步：判断专业好考程度的4个维度</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px;">
+    ${[
+      { n:'1. 名额数量', d:'录取人数越多越好考，<br>还需看"填满率"是否<br>已被一志愿占满', c:'var(--color-text-secondary)' },
+      { n:'2. 进面竞争', d:'国家线进面=竞争最低；<br>划高线但刷人少=次之；<br>划高线且刷人多=最难', c:'var(--color-text-secondary)' },
+      { n:'3. 复试淘汰', d:'复试人数÷录取人数<br>越接近1越安全，>1.3<br>则淘汰压力较大', c:'var(--color-text-secondary)' },
+      { n:'4. 考试难度', d:'是否考数学？考哪种英语？<br>决定初试备考难度，<br>先于招录数据考虑', c:'var(--color-text-secondary)' },
+    ].map(x=>`<div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px;">${x.n}</div>
+      <div style="font-size:11px;color:${x.c};line-height:1.7;">${x.d}</div>
+    </div>`).join('')}
+  </div>
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">重要提示：考试科目不同，但培养方式基本一致</div>
+  <div style="background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:20px;">
+    <div style="font-size:13px;color:var(--color-text-info);line-height:1.8;">
+      各专业虽然考试科目和专业代码不同，但<span style="font-weight:500;">入学后培养方式基本相同</span>——因为研究生培养最关键的是导师，而导师可以不分专业自由选择。<br>
+      因此建议先以"能不能考上"为第一优先，选择自己初试把握更大的专业方向报考。
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">注意：分数高不代表竞争激烈</div>
+  <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:20px;">
+    <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.8;">
+      某些年份（如2025年）初试分数普遍较高，这往往是因为<span style="font-weight:500;color:var(--color-text-primary);">当年出题偏简单，考生整体分数水涨船高</span>，而非报考人数骤增、竞争突然加剧。判断竞争激烈程度，要看复试淘汰率（复试人数÷录取人数），而不是看分数高低。
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">生物与医药专业特别说明</div>
+  <div style="background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:var(--border-radius-lg);padding:14px 16px;">
+    <div style="font-size:13px;color:var(--color-text-warning);line-height:1.8;font-weight:500;">2026年起生物与医药考试科目发生重大变化</div>
+    <div style="font-size:12px;color:var(--color-text-warning);margin-top:4px;line-height:1.8;opacity:0.9;">
+      2025年及之前：考302数学（耗费大量精力），因此历年分数整体偏低。<br>
+      2026年起：改为338生物化学，不再考数学，备考难度大幅下降。<br>
+      因此该专业2025年以前的分数线、中位数数据<span style="font-weight:500;">不适合用于预测2027届考情</span>，仅历年录取人数趋势有参考意义。
+    </div>
+  </div>`;
+}
+
+function buildCompare(){
+  const rows=[
+    {id:'fjas', name:'食品加工与安全',       plan:120,retest:111,admit:107,line:240,minAdm:240,median:317,fill:89,comp:1.04,math:false,eng:2,easy:'最易'},
+    {id:'fse83',name:'食品科学与工程（工）',  plan:93, retest:135,admit:93, line:265,minAdm:275,median:330,fill:100,comp:1.45,math:true, eng:1,easy:'最难'},
+    {id:'fse97',name:'食品科学与工程（农）',  plan:10, retest:3,  admit:3,  line:240,minAdm:240,median:251,fill:30, comp:1.0, math:false,eng:1,easy:'较易'},
+    {id:'bm',   name:'生物与医药',            plan:106,retest:75, admit:75, line:268,minAdm:268,median:356,fill:71, comp:1.0, math:false,eng:2,easy:'较易'},
+    {id:'phm',  name:'公共卫生与预防医学',    plan:30, retest:7,  admit:7,  line:294,minAdm:294,median:313,fill:23, comp:1.0, math:false,eng:1,easy:'中等'},
+  ];
+  const mc=id=>MAJORS.find(m=>m.id===id)?.color||'#888';
+  const cc=v=>v>1.3?'var(--color-text-danger)':v>1.1?'var(--color-text-warning)':'var(--color-text-success)';
+  const fc=v=>v<50?'var(--color-text-danger)':v<80?'var(--color-text-warning)':'var(--color-text-success)';
+  const ec=easy=>easy==='最难'?'var(--color-text-danger)':easy==='中等'?'var(--color-text-warning)':'var(--color-text-success)';
+  const rowsHtml=rows.map(r=>`
+    <tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+      <td style="padding:10px 12px;font-size:12px;font-weight:500;color:${mc(r.id)};white-space:nowrap;">${r.name}</td>
+      <td style="padding:10px 12px;font-size:12px;text-align:center;color:${r.math?'var(--color-text-danger)':'var(--color-text-success)'};">${r.math?'考数学':'不考'}</td>
+      <td style="padding:10px 12px;font-size:12px;text-align:center;color:${r.eng===1?'var(--color-text-warning)':'var(--color-text-success)'};">英语${r.eng}</td>
+      <td style="padding:10px 12px;font-size:12px;text-align:center;font-weight:500;color:${ec(r.easy)};">${r.easy}</td>
+      <td style="padding:10px 12px;font-size:12px;text-align:center;color:var(--color-text-secondary);">${r.plan}</td>
+      <td style="padding:10px 12px;font-size:13px;text-align:center;font-weight:500;color:var(--color-text-danger);">${r.line}</td>
+      <td style="padding:10px 12px;font-size:13px;text-align:center;font-weight:500;color:${mc(r.id)};">${r.median} ★</td>
+      <td style="padding:10px 12px;font-size:12px;text-align:center;font-weight:500;color:${fc(r.fill)};">${r.fill}%</td>
+      <td style="padding:10px 12px;font-size:12px;text-align:center;font-weight:500;color:${cc(r.comp)};">${r.comp.toFixed(2)}:1</td>
+    </tr>`).join('');
+  return `
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.04em;margin-bottom:10px;">2026届各专业数据横向对比（一志愿，排除特殊计划）</div>
+  <div style="overflow-x:auto;margin-bottom:16px;">
+    <table style="width:100%;border-collapse:collapse;font-family:var(--font-sans);">
+      <thead><tr style="border-bottom:0.5px solid var(--color-border-secondary);">
+        ${['专业','是否考数学','英语难度','综合难度','计划名额','复试线','中位数★','填满率','竞争比'].map(h=>`<th style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-align:center;white-space:nowrap;letter-spacing:0.04em;">${h}</th>`).join('')}
+      </tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  </div>
+  <div style="font-size:11px;color:var(--color-text-tertiary);line-height:1.8;margin-bottom:16px;">
+    <span style="color:var(--color-text-success);font-weight:500;">绿色</span>=有利 &nbsp;|&nbsp;
+    <span style="color:var(--color-text-warning);font-weight:500;">橙色</span>=注意 &nbsp;|&nbsp;
+    <span style="color:var(--color-text-danger);font-weight:500;">红色</span>=风险 &nbsp;|&nbsp;
+    ★中位数=稳录目标分 &nbsp;|&nbsp; 填满率=一志愿实际录取/计划名额 &nbsp;|&nbsp; 竞争比=复试人数/录取人数
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+    ${[
+      {label:'综合最容易报考',val:'食品加工与安全',sub:'英语二不考数学，进面几乎零淘汰',color:'#BA7517'},
+      {label:'全院最难报考',val:'食品科学与工程（工）',sub:'数学+英语一，淘汰率31%',color:'#E24B4A'},
+      {label:'最适合避数学',val:'生物与医药',sub:'2026年起改为生物化学，英语二',color:'#7F77DD'},
+      {label:'一志愿最少竞争',val:'食品科学与工程（农）',sub:'仅3人报录，名额严重空缺',color:'#378ADD'},
+    ].map(c=>`<div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">${c.label}</div>
+      <div style="font-size:13px;font-weight:500;color:${c.color};">${c.val}</div>
+      <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">${c.sub}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function buildMajor(id){
+  const m=MAJORS.find(x=>x.id===id);
+  const d=D[id];
+  const e=EXAM[id];
+  const li=d.years.length-1;
+  const comp=(d.retest[li]/d.admit[li]).toFixed(2);
+  const fill=Math.round(d.admit[li]/d.plan[li]*100);
+  const hasHist=d.years.length>1;
+
+  const subjectPills=e.subjects.map(s=>`<span style="display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);margin:2px;">${s}</span>`).join('');
+  const mathPill=e.math?`<span style="display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--color-background-danger);color:var(--color-text-danger);font-weight:500;">含数学一</span>`:`<span style="display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--color-background-success);color:var(--color-text-success);font-weight:500;">不考数学</span>`;
+  const engPill=e.eng===1?`<span style="display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--color-background-warning);color:var(--color-text-warning);font-weight:500;">英语一</span>`:`<span style="display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--color-background-success);color:var(--color-text-success);font-weight:500;">英语二</span>`;
+
+  return `
+  <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-left:3px solid ${m.color};border-radius:var(--border-radius-lg);padding:12px 16px;margin-bottom:18px;">
+    <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);">${m.name}</div>
+    <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">${m.code} · 全日制</div>
+  </div>
+
+  ${e.changed?`<div style="background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:var(--border-radius-lg);padding:12px 16px;margin-bottom:16px;">
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-warning);margin-bottom:4px;">2026年考试科目重大变更</div>
+    <div style="font-size:12px;color:var(--color-text-warning);line-height:1.7;opacity:0.9;">2025年前考302数学 → 2026年起改为338生物化学。历年分数无横向比较意义，以2026年数据为准。</div>
+  </div>`:''}
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">考试科目</div>
+  <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:16px;">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${subjectPills}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+      ${mathPill}${engPill}
+      <span style="font-size:11px;color:var(--color-text-tertiary);">${e.hardNote}</span>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">2026年核心数据</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;">
+    <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">计划招生</div>
+      <div style="font-size:24px;font-weight:500;color:var(--color-text-primary);">${d.plan[li]}<span style="font-size:12px;margin-left:2px;">人</span></div>
+    </div>
+    <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">参加复试</div>
+      <div style="font-size:24px;font-weight:500;color:var(--color-text-primary);">${d.retest[li]}<span style="font-size:12px;margin-left:2px;">人</span></div>
+      <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px;">上线率 ${Math.round(d.retest[li]/d.plan[li]*100)}%</div>
+    </div>
+    <div style="background:var(--color-background-secondary);border:0.5px solid ${m.color};border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">一志愿录取</div>
+      <div style="font-size:24px;font-weight:500;color:${m.color};">${d.admit[li]}<span style="font-size:12px;margin-left:2px;">人</span></div>
+      <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px;">填满率 ${fill}%</div>
+    </div>
+    <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">竞争比</div>
+      <div style="font-size:24px;font-weight:500;color:${parseFloat(comp)>1.3?'var(--color-text-danger)':parseFloat(comp)>1.1?'var(--color-text-warning)':'var(--color-text-success)'};">${comp}:1</div>
+      <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px;">${parseFloat(comp)<=1.05?'几乎零淘汰':parseFloat(comp)<=1.3?'有一定淘汰':'淘汰压力大'}</div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">2026年初试分数三档</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+    <div style="background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:10px;color:var(--color-text-danger);font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">复试线</div>
+      <div style="font-size:28px;font-weight:500;color:var(--color-text-danger);">${d.line[li]}</div>
+      <div style="font-size:11px;color:var(--color-text-danger);margin-top:2px;opacity:0.8;">低于此分无法进面</div>
+    </div>
+    <div style="background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:10px;color:var(--color-text-warning);font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">录取最低分</div>
+      <div style="font-size:28px;font-weight:500;color:var(--color-text-warning);">${d.minAdm[li]}</div>
+      <div style="font-size:11px;color:var(--color-text-warning);margin-top:2px;opacity:0.8;">进面+过复试的下限</div>
+    </div>
+    <div style="background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-lg);padding:12px 14px;">
+      <div style="font-size:10px;color:var(--color-text-success);font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">录取中位数 ★</div>
+      <div style="font-size:28px;font-weight:500;color:var(--color-text-success);">${d.median[li]}</div>
+      <div style="font-size:11px;color:var(--color-text-success);margin-top:2px;opacity:0.8;">稳稳上岸的目标分</div>
+    </div>
+  </div>
+
+  <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:16px;">
+    <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">数据解读</div>
+    <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.8;margin-bottom:6px;"><span style="font-weight:500;color:var(--color-text-primary);">大小年规律：</span>${d.bigSmall}</div>
+    <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.8;margin-bottom:6px;"><span style="font-weight:500;color:var(--color-text-primary);">2026届分析：</span>${d.trend}</div>
+    <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.8;"><span style="font-weight:500;color:var(--color-text-primary);">备考建议：</span>${d.advice}</div>
+    ${d.warn?`<div style="margin-top:10px;padding:8px 12px;background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-md);font-size:12px;color:var(--color-text-danger);">${d.warn}</div>`:''}
+    <div style="margin-top:10px;padding:8px 12px;background:var(--color-background-secondary);border:0.5px solid ${m.color};border-radius:var(--border-radius-md);font-size:12px;color:var(--color-text-secondary);">
+      <span style="color:${m.color};font-weight:500;">综合评价：</span>${d.tip}&nbsp;&nbsp;
+      <span style="color:${m.color};font-size:13px;">${d.easy}</span>
+    </div>
+  </div>
+
+  ${hasHist?`
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">历年分数趋势（2019—2026）${id==='bm'?'&nbsp;<span style="font-weight:500;color:var(--color-text-warning);font-size:11px;">注：2026年前考数学，分数不可横向比较</span>':''}</div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px;">
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:2px;background:#E24B4A;display:inline-block;"></span>复试线</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:2px;background:#EF9F27;display:inline-block;"></span>录取最低</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:2px;background:${m.color};display:inline-block;"></span>录取中位数 ★</span>
+  </div>
+  <div style="position:relative;width:100%;height:200px;margin-bottom:16px;"><canvas id="sc-${id}" role="img" aria-label="${m.name}历年分数趋势"></canvas></div>
+  <div style="font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">历年招录人数趋势（2019—2026）</div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px;">
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:10px;background:rgba(136,135,128,0.2);border:0.5px solid #888780;display:inline-block;"></span>计划招生</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:2px;background:#888780;display:inline-block;"></span>参加复试</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:2px;background:${m.color};display:inline-block;"></span>一志愿录取</span>
+  </div>
+  <div style="position:relative;width:100%;height:190px;"><canvas id="cc-${id}" role="img" aria-label="${m.name}历年招录人数趋势"></canvas></div>
+  `:''}`;
+}
+
+function renderCharts(id){
+  const m=MAJORS.find(x=>x.id===id);
+  const d=D[id];
+  if(d.years.length<=1) return;
+  const gc_=gc(),tc_=tc();
+
+  if(!chartInstances['s'+id]){
+    const el=document.getElementById('sc-'+id);
+    if(el) chartInstances['s'+id]=new Chart(el,{type:'line',data:{labels:d.years,datasets:[
+      {label:'复试线',data:d.line,borderColor:'#E24B4A',backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:0.3},
+      {label:'录取最低',data:d.minAdm,borderColor:'#EF9F27',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:2,tension:0.3},
+      {label:'录取中位数',data:d.median,borderColor:m.color,backgroundColor:'transparent',borderWidth:2.5,pointRadius:4,tension:0.3},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+      x:{grid:{color:gc_},ticks:{color:tc_,font:{size:11}}},
+      y:{min:220,max:420,grid:{color:gc_},ticks:{color:tc_,font:{size:11}}}
+    }}});
+  }
+  if(!chartInstances['c'+id]){
+    const el=document.getElementById('cc-'+id);
+    if(el) chartInstances['c'+id]=new Chart(el,{type:'bar',data:{labels:d.years,datasets:[
+      {label:'计划招生',data:d.plan,backgroundColor:'rgba(136,135,128,0.18)',borderColor:'#888780',borderWidth:0.5,order:2},
+      {label:'参加复试',data:d.retest,type:'line',borderColor:'#888780',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:2,tension:0.3,order:1},
+      {label:'一志愿录取',data:d.admit,type:'line',borderColor:m.color,backgroundColor:'transparent',borderWidth:2.5,pointRadius:4,tension:0.3,order:0},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+      x:{grid:{color:gc_},ticks:{color:tc_,font:{size:11}}},
+      y:{grid:{color:gc_},ticks:{color:tc_,font:{size:11}}}
+    }}});
+  }
+}
+
+function switchTab(id){
+  currentTab=id;
+  document.querySelectorAll('.tb').forEach(b=>{
+    const m=MAJORS.find(x=>x.id===b.dataset.id);
+    const active=b.dataset.id===id;
+    b.style.borderBottom=active?`2px solid ${m?.color||'#888'}`:'2px solid transparent';
+    b.style.color=active?(m?.color||'var(--color-text-primary)'):'var(--color-text-tertiary)';
+    b.style.fontWeight=active?'500':'400';
+  });
+  const c=document.getElementById('app-content');
+  if(id==='guide') c.innerHTML=buildGuide();
+  else if(id==='compare') c.innerHTML=buildCompare();
+  else { c.innerHTML=buildMajor(id); setTimeout(()=>renderCharts(id),50); }
+}
+
+function init(){
+  const nav=document.getElementById('tab-nav');
+  MAJORS.forEach(m=>{
+    const b=document.createElement('button');
+    b.className='tb'; b.dataset.id=m.id; b.textContent=m.name;
+    b.style.cssText='background:none;border:none;border-bottom:2px solid transparent;color:var(--color-text-tertiary);padding:10px 14px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:var(--font-sans);';
+    b.addEventListener('click',()=>switchTab(m.id));
+    nav.appendChild(b);
+  });
+  switchTab('guide');
+}
+if(typeof Chart!=='undefined'){init();}else{window.onload=init;}
+</script>
